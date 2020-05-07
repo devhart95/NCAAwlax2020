@@ -1,24 +1,32 @@
-maryland <- read.csv("Marylandcheck2020.csv")
+#2020 Schedule uploads to find streams / begin tracking
 
-toDelete <- seq(1, nrow(maryland), 2)
-maryland <- maryland[-toDelete,]
+#Upload csv files
+data_dir <- "NCAA2020 copy"
+fs::dir_ls(data_dir)
 
-stanford <- read.csv("Stanford2020.csv")
+csv_files <- fs::dir_ls(data_dir, regexp = "\\.csv$")
+csv_files
 
-toDelete1 <- seq(1, nrow(stanford), 2)
-stanford <- stanford[-toDelete1,]
+ncaa2020 <- csv_files %>% 
+  map_dfr(read_csv)
 
-american <- read.csv("AmericanUniversity2020.csv")
+#Delete empty location column
+ncaa2020 <- ncaa2020[,-(8)]
 
-toDelete2 <- seq(1, nrow(american), 2)
-american <- american[-toDelete2,]
+#Get only complete rows
+ncaawlax2020 <- ncaa2020[complete.cases(ncaa2020), ]
 
-#Test a function
-#To Delete empty rows
+#Delete empty alternating rows
+toDelete <- seq(1, nrow(ncaa2020), 2)
+ncaa2020 <- ncaa2020[-toDelete ,]
 
-oldseasons <- function(school){
-  toDelete <- seq(1, nrow(school), 2)
-  school <- school[-toDelete,]
-}
+#Add in empty columns for printout
+ncaawlax2020$Stream <- ""
+ncaawlax2020$Tracked <- ""
 
-oldseasons(american)
+#Filter only wins to eliminate potential duplicate games
+wins <- ncaawlax2020 %>%
+  filter(Result == "W")
+
+#Print out to begin tracking streaming locations / completions
+write.csv(wins,"NCAA2020 copy\\StreamTracker.csv", row.names = FALSE)
